@@ -1,0 +1,29 @@
+{
+  "sections": [
+    {
+      "title": "物理基础",
+      "items": [
+        {
+          "name": "抛体运动",
+          "file": "demos/physics/projectile.html",
+          "desc": "调整初速和角度，实时观察轨迹"
+        },
+        {
+          "name": "简谐振动",
+          "file": "demos/physics/harmonic.html",
+          "desc": "拖动改变质量与弹簧常数"
+        }
+      ]
+    },
+    {
+      "title": "电子电路",
+      "items": [
+        {
+          "name": "欧姆定律",
+          "file": "demos/electronics/ohm-law.html",
+          "desc": "实时计算电压、电流、电阻关系"
+        }
+      ]
+    }
+  ]
+}

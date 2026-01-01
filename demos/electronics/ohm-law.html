@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>欧姆定律 - 523322.xyz</title>
+  <style>
+    body{font-family:system-ui; margin:40px; background:#f8f9fa;}
+    .container{max-width:600px; margin:auto; background:white; padding:30px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+    input{width:100%; padding:12px; margin:15px 0; font-size:1.2em;}
+    .result{font-size:1.5em; color:#007bff; text-align:center; margin:30px 0;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>欧姆定律互动计算器</h1>
+    <p>公式：\( V = I \times R \)</p>
+
+    <label>电压 V (伏特): <input type="number" id="v" placeholder="输入电压" step="0.1"></label>
+    <label>电流 I (安培): <input type="number" id="i" placeholder="输入电流" step="0.01"></label>
+    <label>电阻 R (欧姆): <input type="number" id="r" placeholder="输入电阻" step="1"></label>
+
+    <div class="result" id="result">输入任意两个值，自动计算第三个</div>
+  </div>
+
+  <script>
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => input.addEventListener('input', calculate));
+
+    function calculate() {
+      const v = parseFloat(document.getElementById('v').value) || NaN;
+      const i = parseFloat(document.getElementById('i').value) || NaN;
+      const r = parseFloat(document.getElementById('r').value) || NaN;
+      const result = document.getElementById('result');
+
+      if (!isNaN(v) && !isNaN(i)) result.textContent = `电阻 R = ${(v / i).toFixed(2)} Ω`;
+      else if (!isNaN(v) && !isNaN(r)) result.textContent = `电流 I = ${(v / r).toFixed(3)} A`;
+      else if (!isNaN(i) && !isNaN(r)) result.textContent = `电压 V = ${(i * r).toFixed(2)} V`;
+      else result.textContent = '输入任意两个值，自动计算第三个';
+    }
+  </script>
+
+  <p style="text-align:center;"><a href="../..">← 返回首页</a></p>
+</body>
+</html>

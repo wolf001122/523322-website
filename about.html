@@ -1,13 +1,114 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>关于 - 523322.xyz</title>
+<meta charset="UTF-8">
+<title>关于导航</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:#f8f9fa;
+  color:#202124;
+  min-height:100vh;
+  padding:24px;
+}
+h2{font-size:28px;color:#202124;margin-bottom:16px;}
+p{font-size:16px;color:#5f6368;margin-bottom:12px;line-height:1.6;}
+input,textarea{
+  width:100%;padding:12px;border:1px solid #dadce0;border-radius:6px;margin-bottom:12px;font-size:14px;outline:none;
+}
+textarea{resize:none;height:100px;}
+button{
+  padding:10px 20px;background:#1a73e8;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s;
+}
+button:hover{background:#1669c1;}
+.feedback-section{margin-top:32px;}
+#captcha-box{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+#captcha-box input{flex:1;}
+</style>
 </head>
-<body style="font-family:system-ui; max-width:800px; margin:40px auto; line-height:1.8;">
-  <h1>关于 523322.xyz</h1>
-  <p>这是一个个人工科教学站点，秉持“三三两两，积少成渊”的理念，从零散小知识入手，通过互动代码演示，帮助大家轻松学习物理、电子、编程等内容。</p>
-  <p>所有演示均为纯客户端 JavaScript + Canvas 实现，无需安装任何软件，加载极快。</p>
-  <p><a href="index.html">← 返回首页</a></p>
+<body>
+
+<h2>关于本站</h2>
+<p>本站（吾爱三三两两）致力于从零散小知识入手，通过互动代码演示，帮助大家轻松学习各种有趣的知识。
+<p>本站资源有站长本人开发，也有网友无私捐助，热忱欢迎大家一起努力把本站建设的更加美好。</p>
+<p>如发现不良内容，可联系我们处理。</p>
+
+<div class="feedback-section">
+  <h3>用户反馈</h3>
+  <textarea id="fb-message" placeholder="请输入您的建议或反馈..."></textarea>
+  <input id="fb-contact" placeholder="联系方式（选填，可填写邮箱或手机号）">
+
+  <div id="captcha-box">
+    <span id="captcha-text"></span>
+    <input id="fb-captcha" placeholder="请输入答案">
+  </div>
+
+  <button id="feedback-btn">提交</button>
+</div>
+
+<script>
+let captchaAnswer = 0;
+
+// 生成简单数学验证码
+function generateCaptcha(){
+  const a = Math.floor(Math.random()*10)+1;
+  const b = Math.floor(Math.random()*10)+1;
+  captchaAnswer = a+b;
+  document.getElementById('captcha-text').textContent = `请计算: ${a} + ${b} = ?`;
+}
+
+// 初始化
+generateCaptcha();
+
+// 提交反馈
+document.getElementById('feedback-btn').onclick = async () => {
+  const message = document.getElementById('fb-message').value.trim();
+  const contact = document.getElementById('fb-contact').value.trim();
+  const captcha = document.getElementById('fb-captcha').value.trim();
+
+  if(!message){ alert('请输入反馈内容'); return; }
+
+  if(parseInt(captcha)!==captchaAnswer){
+    alert('验证码错误，请重新输入');
+    generateCaptcha(); 
+    document.getElementById('fb-captcha').value = '';
+    return;
+  }
+
+  // 简单垃圾过滤
+  const spamWords = ['成人','赌博','贷款','彩票','AV','porn','sex','casino','博彩','黄色','约炮'];
+  if(spamWords.some(w => message.toLowerCase().includes(w))){
+    alert('内容包含敏感词，提交失败'); 
+    generateCaptcha();
+    return;
+  }
+
+  try{
+    const res = await fetch('/api/kv/NAV_DATA/user_feedback',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ message, contact, time:new Date().toISOString() })
+    });
+    if(res.ok){
+      alert('✅ 感谢您的反馈，我们已收到！');
+      document.getElementById('fb-message').value='';
+      document.getElementById('fb-contact').value='';
+      document.getElementById('fb-captcha').value='';
+      generateCaptcha();
+    }else{
+      const text = await res.text();
+      alert('❌ 提交失败: '+text);
+      generateCaptcha();
+    }
+  }catch(e){
+    alert('❌ 提交异常: '+e.message);
+    generateCaptcha();
+  }
+}
+</script>
+
 </body>
 </html>

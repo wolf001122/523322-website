@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分类管理</title>
+  <!-- 关键修复：禁用缓存，强制每次加载都从服务器获取 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+  <style>
+    /* 样式保持不变 */
+    body { background:#f1f3f4; padding:24px; font-family:'Roboto',Arial,sans-serif; }
+    .card { background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.12); padding:24px; margin-bottom:24px; }
+    h2 { font-size:20px; color:#3c4043; margin:0 0 16px; display:flex; justify-content:space-between; align-items:center; }
+    button { background:#4285f4; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px; }
+    button:hover { background:#3367d6; }
+    button.success { background:#34a853; padding:12px 24px; font-size:16px; }
+    button.success:hover { background:#2d8e44; }
+    button.danger { background:#ea4335; }
+    button.danger:hover { background:#d33b2f; }
+    .category { border-left:4px solid #4285f4; padding-left:16px; margin:20px 0; cursor:move; }
+    .subcategory { margin:16px 0 24px 32px; border-left:2px solid #dadce0; padding-left:16px; cursor:move; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .status { margin-top:12px; padding:12px; border-radius:4px; font-size:14px; }
+    .status.success { background:#e6f4ea; color:#137333; border:1px solid #34a853; }
+    .status.error { background:#fce8e6; color:#c5221f; border:1px solid #ea4335; }
+  </style>
+  <!-- 关键修复：JS 检查登录（包括刷新/后退） -->
+  <script>
+    function checkLogin() {
+      if (!document.cookie.split(';').some(c => c.trim().startsWith('admin_logged_in=true'))) {
+        location.replace('/admin/login.html');
+      }
+    }
+    checkLogin(); // 立即检查
+    window.addEventListener('load', checkLogin);
+    window.addEventListener('pageshow', checkLogin);
+    window.addEventListener('focus', checkLogin); // 窗口获得焦点时检查
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h2>分类管理</h2>
+    <div style="margin-bottom:20px;">
+      <button class="success" onclick="saveToKV()">保存到 KV（永久生效）</button>
+      <div id="saveStatus"></div>
+    </div>
+    <div style="display:flex; gap:12px; margin-bottom:20px;">
+      <button onclick="addCategory()">+ 新增一级分类</button>
+    </div>
+    <div id="categoriesList">
+      <p style="color:#5f6368;">加载中...</p>
+    </div>
+  </div>
+  <!-- 原有脚本保持不变 -->
+  <script>
+    let categories = [];
+
+    function showStatus(message, isSuccess = true) {
+      const div = document.getElementById('saveStatus');
+      div.textContent = message;
+      div.className = 'status ' + (isSuccess ? 'success' : 'error');
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/data');
+        if (!res.ok) throw new Error('读取失败');
+        const xml = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, 'text/xml');
+        categories = Array.from(doc.querySelectorAll('category')).map(cat => ({
+          name: cat.getAttribute('name'),
+          subcategories: Array.from(cat.querySelectorAll('subcategory')).map(sub => ({
+            name: sub.getAttribute('name'),
+            links: Array.from(sub.querySelectorAll('link')).map(l => ({
+              name: l.getAttribute('name'),
+              url: l.getAttribute('url'),
+              desc: l.getAttribute('desc') || '',
+              icon: l.getAttribute('icon') || ''
+            }))
+          })) || [{ name: '默认子分类', links: [] }]
+        }));
+        renderCategories();
+        initSortable();
+      } catch (e) {
+        alert('加载失败：' + e.message);
+      }
+    }
+
+    function renderCategories() {
+      const list = document.getElementById('categoriesList');
+      list.innerHTML = '';
+      categories.forEach((cat, cIdx) => {
+        const catDiv = document.createElement('div');
+        catDiv.className = 'category';
+        catDiv.dataset.idx = cIdx;
+        catDiv.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong style="font-size:18px;">${cat.name}</strong>
+            <div class="actions">
+              <button onclick="editCategory(${cIdx})">编辑</button>
+              <button class="danger" onclick="deleteCategory(${cIdx})">删除</button>
+              <button onclick="addSubcategory(${cIdx})">+ 二级分类</button>
+            </div>
+          </div>
+        `;
+        cat.subcategories.forEach((sub, sIdx) => {
+          const subDiv = document.createElement('div');
+          subDiv.className = 'subcategory';
+          subDiv.dataset.subIdx = sIdx;
+          subDiv.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span>${sub.name} (${sub.links.length} 个链接)</span>
+              <div class="actions">
+                <button onclick="editSubcategory(${cIdx},${sIdx})">编辑</button>
+                <button class="danger" onclick="deleteSubcategory(${cIdx},${sIdx})">删除</button>
+              </div>
+            </div>
+          `;
+          catDiv.appendChild(subDiv);
+        });
+        list.appendChild(catDiv);
+      });
+    }
+
+    function initSortable() {
+      new Sortable(document.getElementById('categoriesList'), {
+        animation: 150,
+        handle: '.category',
+        onEnd: () => {
+          const newOrder = Array.from(document.querySelectorAll('.category')).map(el => parseInt(el.dataset.idx));
+          categories = newOrder.map(idx => categories[idx]);
+          renderCategories();
+          initSortable();
+        }
+      });
+    }
+
+    function addCategory() {
+      const name = prompt('请输入一级分类名称');
+      if (name && name.trim()) {
+        categories.push({ name: name.trim(), subcategories: [{ name: '默认子分类', links: [] }] });
+        renderCategories();
+        initSortable();
+      }
+    }
+    function editCategory(idx) {
+      const name = prompt('修改一级分类名称', categories[idx].name);
+      if (name && name.trim()) {
+        categories[idx].name = name.trim();
+        renderCategories();
+      }
+    }
+    function deleteCategory(idx) {
+      if (confirm(`确认删除一级分类 "${categories[idx].name}" 及其所有子分类和链接？`)) {
+        categories.splice(idx, 1);
+        renderCategories();
+        initSortable();
+      }
+    }
+    function addSubcategory(cIdx) {
+      const name = prompt('请输入二级分类名称');
+      if (name && name.trim()) {
+        categories[cIdx].subcategories.push({ name: name.trim(), links: [] });
+        renderCategories();
+      }
+    }
+    function editSubcategory(cIdx, sIdx) {
+      const name = prompt('修改二级分类名称', categories[cIdx].subcategories[sIdx].name);
+      if (name && name.trim()) {
+        categories[cIdx].subcategories[sIdx].name = name.trim();
+        renderCategories();
+      }
+    }
+    function deleteSubcategory(cIdx, sIdx) {
+      if (confirm(`确认删除二级分类 "${categories[cIdx].subcategories[sIdx].name}" 及其所有链接？`)) {
+        categories[cIdx].subcategories.splice(sIdx, 1);
+        renderCategories();
+      }
+    }
+
+    async function saveToKV() {
+      if (!confirm('确认保存所有分类修改到 KV？')) return;
+      showStatus('正在保存...', false);
+      try {
+        const res = await fetch('/api/data');
+        if (!res.ok) throw new Error('读取失败');
+        const originalXml = await res.text();
+        const parser = new DOMParser();
+        const originalDoc = parser.parseFromString(originalXml, 'text/xml');
+
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<navigation>\n';
+        const admin = originalDoc.querySelector('admin');
+        if (admin) {
+          const attrs = ['username', 'password'].map(attr => {
+            const val = admin.getAttribute(attr);
+            return val ? ` ${attr}="${val}"` : '';
+          }).join('');
+          xml += `  <admin${attrs} />\n`;
+        }
+        categories.forEach(cat => {
+          xml += `  <category name="${escapeXml(cat.name)}">\n`;
+          cat.subcategories.forEach(sub => {
+            xml += `    <subcategory name="${escapeXml(sub.name)}">\n`;
+            const origCat = Array.from(originalDoc.querySelectorAll('category')).find(c => c.getAttribute('name') === cat.name);
+            if (origCat) {
+              const origSub = Array.from(origCat.querySelectorAll('subcategory')).find(s => s.getAttribute('name') === sub.name);
+              if (origSub) {
+                Array.from(origSub.querySelectorAll('link')).forEach(link => {
+                  const attrs = ['name', 'url', 'desc', 'icon'].map(attr => {
+                    const val = link.getAttribute(attr) || '';
+                    return val ? ` ${attr}="${escapeXml(val)}"` : '';
+                  }).join('');
+                  xml += `      <link${attrs} />\n`;
+                });
+              }
+            }
+            xml += '    </subcategory>\n';
+          });
+          xml += '  </category>\n';
+        });
+        xml += '</navigation>';
+
+        const saveRes = await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/xml' },
+          body: xml
+        });
+        if (saveRes.ok) {
+          showStatus('保存成功！', true);
+        } else {
+          showStatus('保存失败：' + await saveRes.text(), false);
+        }
+      } catch (e) {
+        showStatus('异常：' + e.message, false);
+      }
+    }
+
+    function escapeXml(s) {
+      if (!s) return '';
+      return s.replace(/[<>&"']/g, c => ({
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&apos;'
+      })[c]);
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

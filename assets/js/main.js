@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const resp = await fetch('/navigation.json');
+    const resp = await fetch('/api/navigation');  // 从 Pages Function 读取 KV
     const data = await resp.json();
     const container = document.getElementById('modules');
 

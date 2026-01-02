@@ -23,13 +23,13 @@ export async function onRequest(context) {
      GET /api/data - 读取 XML
   ===================================================== */
   if (url.pathname === '/api/data' && request.method === 'GET') {
-    let xml = await env.NAV_DATA.get('nav_data');
+    let xml = await env.SITE_NAVIGATION.get('nav_data');
     if (!xml) {
       xml = `<?xml version="1.0" encoding="UTF-8"?>
 <navigation>
   <admin username="admin" password="pbkdf2:sha256:600000:example:example" />
 </navigation>`;
-      await env.NAV_DATA.put('nav_data', xml);
+      await env.SITE_NAVIGATION.put('nav_data', xml);
     }
     return new Response(xml, {
       headers: { 'Content-Type': 'text/xml;charset=utf-8' }
@@ -42,7 +42,7 @@ export async function onRequest(context) {
   if (url.pathname === '/api/save' && request.method === 'POST') {
     try {
       const body = await request.text();
-      await env.NAV_DATA.put('nav_data', body);
+      await env.SITE_NAVIGATION.put('nav_data', body);
       return new Response('OK', { status: 200 });
     } catch (e) {
       return new Response('保存失败: ' + e.message, { status: 500 });
@@ -64,11 +64,11 @@ export async function onRequest(context) {
       site.id = Date.now();
       site.time = new Date().toISOString();
 
-      let pending = await env.NAV_DATA.get('pending_sites');
+      let pending = await env.SITE_NAVIGATION.get('pending_sites');
       let list = pending ? JSON.parse(pending) : [];
       list.push(site);
 
-      await env.NAV_DATA.put('pending_sites', JSON.stringify(list));
+      await env.SITE_NAVIGATION.put('pending_sites', JSON.stringify(list));
       return new Response('提交成功', { status: 200 });
     } catch (e) {
       return new Response('提交失败: ' + e.message, { status: 500 });
@@ -79,7 +79,7 @@ export async function onRequest(context) {
      GET /api/pending - 获取待审核列表
   ===================================================== */
   if (url.pathname === '/api/pending' && request.method === 'GET') {
-    const pending = await env.NAV_DATA.get('pending_sites');
+    const pending = await env.SITE_NAVIGATION.get('pending_sites');
     const list = pending ? JSON.parse(pending) : [];
     return new Response(JSON.stringify(list), {
       headers: { 'Content-Type': 'application/json;charset=utf-8' }
@@ -94,7 +94,7 @@ export async function onRequest(context) {
     try {
       const { id, action } = await request.json();
 
-      let pending = await env.NAV_DATA.get('pending_sites');
+      let pending = await env.SITE_NAVIGATION.get('pending_sites');
       if (!pending) return new Response('无数据', { status: 404 });
 
       let list = JSON.parse(pending);
@@ -103,7 +103,7 @@ export async function onRequest(context) {
 
       if (action === 'approve' || action === 'approve_online') {
         const site = list[index];
-        let xml = await env.NAV_DATA.get('nav_data');
+        let xml = await env.SITE_NAVIGATION.get('nav_data');
         if (!xml) return new Response('XML 异常', { status: 500 });
 
         const linkStr = `  <link name="${site.name}" url="${site.url}"${site.desc ? ` desc="${site.desc}"` : ''} />`;
@@ -135,12 +135,12 @@ ${linkStr}
         }
 
         if (action === 'approve_online') {
-          await env.NAV_DATA.put('nav_data', xml);
+          await env.SITE_NAVIGATION.put('nav_data', xml);
         }
       }
 
       list.splice(index, 1);
-      await env.NAV_DATA.put('pending_sites', JSON.stringify(list));
+      await env.SITE_NAVIGATION.put('pending_sites', JSON.stringify(list));
       return new Response('OK', { status: 200 });
 
     } catch (e) {
@@ -154,14 +154,14 @@ ${linkStr}
   if (url.pathname === '/api/edit' && request.method === 'POST') {
     try {
       const { id, cat1, cat2, name, url, desc } = await request.json();
-      let pending = await env.NAV_DATA.get('pending_sites');
+      let pending = await env.SITE_NAVIGATION.get('pending_sites');
       let list = pending ? JSON.parse(pending) : [];
 
       const idx = list.findIndex(s => s.id === id);
       if (idx === -1) return new Response('不存在', { status: 404 });
 
       Object.assign(list[idx], { cat1, cat2, name, url, desc });
-      await env.NAV_DATA.put('pending_sites', JSON.stringify(list));
+      await env.SITE_NAVIGATION.put('pending_sites', JSON.stringify(list));
 
       return new Response('OK');
     } catch (e) {
@@ -177,11 +177,11 @@ ${linkStr}
       const fb = await request.json();
       if (!fb.message) return new Response('空内容', { status: 400 });
 
-      let list = await env.NAV_DATA.get('user_feedback');
+      let list = await env.SITE_NAVIGATION.get('user_feedback');
       list = list ? JSON.parse(list) : [];
       list.push(fb);
 
-      await env.NAV_DATA.put('user_feedback', JSON.stringify(list));
+      await env.SITE_NAVIGATION.put('user_feedback', JSON.stringify(list));
       return new Response('OK');
     } catch (e) {
       return new Response('保存失败', { status: 500 });
@@ -192,7 +192,7 @@ ${linkStr}
      管理员：获取反馈列表
   ===================================================== */
   if (url.pathname === '/api/feedback/list' && request.method === 'GET') {
-    const list = await env.NAV_DATA.get('user_feedback');
+    const list = await env.SITE_NAVIGATION.get('user_feedback');
     return new Response(list || '[]', {
       headers:{'Content-Type':'application/json;charset=utf-8'}
     });
@@ -203,10 +203,10 @@ ${linkStr}
   ===================================================== */
   if (url.pathname === '/api/feedback/delete' && request.method === 'POST') {
     const { index } = await request.json();
-    let list = await env.NAV_DATA.get('user_feedback');
+    let list = await env.SITE_NAVIGATION.get('user_feedback');
     list = list ? JSON.parse(list) : [];
     list.splice(index, 1);
-    await env.NAV_DATA.put('user_feedback', JSON.stringify(list));
+    await env.SITE_NAVIGATION.put('user_feedback', JSON.stringify(list));
     return new Response('OK');
   }
 

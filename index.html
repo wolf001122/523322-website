@@ -290,24 +290,17 @@ body {
   background:rgba(26,115,232,0.4);
   border-radius:3px;
 }
-.category-title { font-size: 32px; font-weight: 600; margin-bottom: 16px; }
-.sub-title {
-  font-size: 20px;
-  color: var(--primary);
-  margin: 36px 0 14px;
-  padding-bottom: 6px;
-  border-bottom: 2px solid var(--primary);
-}
 .links {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
   padding: 0 8px;
 }
 .card {
   display: flex;
-  align-items: center;
-  padding: 12px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 16px;
   background: var(--card-bg);
   border-radius: 12px;
   text-decoration: none;
@@ -323,18 +316,9 @@ body {
   transform: translateY(-3px);
   box-shadow: 0 6px 18px rgba(0,0,0,0.14);
 }
-.card img {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  object-fit: contain;
-  background: var(--bg);
-  border-radius: 8px;
-  padding: 4px;
-}
-.text { margin-left: 12px; overflow: hidden; flex: 1; }
-.name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.desc { font-size: 13px; color: var(--text-light); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.text { overflow: hidden; flex: 1; }
+.name { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desc { font-size: 13px; color: var(--text-light); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .credit {
   position: absolute;
   bottom: 8px;
@@ -463,7 +447,6 @@ body {
     <div id="content"></div>
   </div>
 </div>
-
 <script>
 const API = '/api/data';
 const DEF_ICON = '/icons/gray.png';
@@ -473,15 +456,6 @@ let xmlDoc = null;
 const categoryCache = new Map();
 let lastState = 'search';
 let lastCategoryData = null;
-
-function getDomain(url) {
-  try {
-    const h = new URL(url).hostname;
-    return h.startsWith('www.') ? h.slice(4) : h;
-  } catch {
-    return 'example.com';
-  }
-}
 
 function isInternalLink(url) {
   if (typeof url !== 'string') return false;
@@ -562,13 +536,16 @@ function showCategory(cat) {
   document.getElementById('search-page').style.display = 'none';
   const cont = document.getElementById('content');
   cont.style.display = 'block';
-  cont.innerHTML = `<div class="category-title">${cat.name}</div>
-  <div class="ad-box"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9474229114991789" data-ad-slot="9876543210" data-ad-format="auto"></ins></div>`;
+  cont.style.padding = '28px';
+  // 不显示一级分类标题，直接开始展示内容
+  cont.innerHTML = `<div class="ad-box"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9474229114991789" data-ad-slot="9876543210" data-ad-format="auto"></ins></div>`;
   (adsbygoogle = window.adsbygoogle || []).push({});
+
+  // 直接遍历所有子分类，依次添加链接（保留二级标题）
   cat.subs.forEach(sub => {
     if (!sub.links.length) return;
     cont.innerHTML += `<div class="sub-title">${sub.name}</div><div class="links"></div>`;
-    const linksBox = cont.lastElementChild;
+    const linksBox = cont.lastElementChild.previousElementSibling.nextElementSibling; // 最后一个 .links
     sub.links.forEach(link => {
       const a = document.createElement('a');
       a.className = 'card';
@@ -582,11 +559,6 @@ function showCategory(cat) {
         }
       };
 
-      const img = document.createElement('img');
-      const favicon = link.icon.trim() || DEF_ICON;
-      img.src = favicon;
-      img.onerror = () => { img.src = DEF_ICON; };
-
       const textDiv = document.createElement('div');
       textDiv.className = 'text';
       textDiv.innerHTML = `<div class="name">${link.name}</div><div class="desc">${link.desc}</div>`;
@@ -599,10 +571,12 @@ function showCategory(cat) {
       credit.className = 'credit';
       credit.textContent = creditText;
 
-      a.append(img, textDiv, credit);
+      a.appendChild(textDiv);
+      a.appendChild(credit);
       linksBox.appendChild(a);
     });
   });
+
   document.getElementById('logo').classList.add('return-mode');
   closeSidebarOnMobile();
 }
@@ -661,7 +635,7 @@ function closeSidebarOnMobile() {
   }
 }
 
-/* 完整搜索功能 */
+/* 搜索功能保持完全不变 */
 document.body.insertAdjacentHTML('beforeend', `
 <div style="display:none;">
   <input hidden type="radio" name="type" checked id="type-baidu" value="https://www.baidu.com/s?wd=" data-placeholder="百度一下，你就知道">

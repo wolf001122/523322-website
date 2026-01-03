@@ -481,7 +481,7 @@ function getDomain(url) {
   }
 }
 
-// 严格判断站内链接：以 / 开头，且不包含 http:// 或 https://
+// 判断是否为站内相对路径链接
 function isInternalLink(url) {
   if (typeof url !== 'string') return false;
   const trimmed = url.trim();
@@ -574,15 +574,16 @@ function showCategory(cat) {
     sub.links.forEach(link => {
       const a = document.createElement('a');
       a.className = 'card';
-      a.href = '#'; // 防止无 JS 时跳转到顶部，关键是 onclick 控制行为
+      a.href = link.url; // 恢复原始 url
+      a.target = isInternalLink(link.url) ? '' : '_blank';
+      a.rel = isInternalLink(link.url) ? '' : 'noopener';
 
       a.onclick = (e) => {
-        e.preventDefault(); // 强制阻止默认行为
         if (isInternalLink(link.url)) {
+          e.preventDefault(); // 只对站内链接阻止默认行为
           loadExperiment(link.url);
-        } else {
-          window.open(link.url, '_blank', 'noopener');
         }
+        // 站外链接不阻止，让它正常新窗口打开
       };
 
       const img = document.createElement('img');
@@ -667,7 +668,7 @@ function closeSidebarOnMobile() {
   }
 }
 
-/* 搜索功能完整保留 */
+/* 搜索功能保持原样 */
 document.body.insertAdjacentHTML('beforeend', `
 <div style="display:none;">
   <input hidden type="radio" name="type" checked id="type-baidu" value="https://www.baidu.com/s?wd=" data-placeholder="百度一下，你就知道">

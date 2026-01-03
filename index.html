@@ -290,6 +290,17 @@ body {
   background:rgba(26,115,232,0.4);
   border-radius:3px;
 }
+
+/* 保留并优化二级标题蓝色下划线 */
+.sub-title {
+  font-size: 20px;
+  color: var(--primary);
+  margin: 36px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+  font-weight: 600;
+}
+
 .links {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -449,7 +460,6 @@ body {
 </div>
 <script>
 const API = '/api/data';
-const DEF_ICON = '/icons/gray.png';
 let currentEngine = "https://www.baidu.com/s?wd=";
 let data = [];
 let xmlDoc = null;
@@ -537,15 +547,17 @@ function showCategory(cat) {
   const cont = document.getElementById('content');
   cont.style.display = 'block';
   cont.style.padding = '28px';
-  // 不显示一级分类标题，直接开始展示内容
+  
+  // 先插入顶部广告
   cont.innerHTML = `<div class="ad-box"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9474229114991789" data-ad-slot="9876543210" data-ad-format="auto"></ins></div>`;
   (adsbygoogle = window.adsbygoogle || []).push({});
 
-  // 直接遍历所有子分类，依次添加链接（保留二级标题）
+  // 遍历所有二级分类，保留标题 + 蓝色下划线
   cat.subs.forEach(sub => {
     if (!sub.links.length) return;
     cont.innerHTML += `<div class="sub-title">${sub.name}</div><div class="links"></div>`;
-    const linksBox = cont.lastElementChild.previousElementSibling.nextElementSibling; // 最后一个 .links
+    const linksBox = cont.querySelector('.links:last-of-type');
+    
     sub.links.forEach(link => {
       const a = document.createElement('a');
       a.className = 'card';
@@ -635,7 +647,7 @@ function closeSidebarOnMobile() {
   }
 }
 
-/* 搜索功能保持完全不变 */
+/* 搜索功能完整保留（与原版一致） */
 document.body.insertAdjacentHTML('beforeend', `
 <div style="display:none;">
   <input hidden type="radio" name="type" checked id="type-baidu" value="https://www.baidu.com/s?wd=" data-placeholder="百度一下，你就知道">

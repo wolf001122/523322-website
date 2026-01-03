@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>抛体运动 - 523322.xyz</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+  <style>
+    body {font-family:system-ui; margin:20px; background:#f8f9fa;}
+    canvas {border:1px solid #ccc; background:#fff; display:block; margin:20px auto;}
+    .controls {text-align:center; margin:20px;}
+    label {margin:0 15px;}
+  </style>
+</head>
+<body>
+  <h1>抛体运动模拟</h1>
+  <p>公式：轨迹方程 \( y = x \tan\theta - \frac{g x^2}{2 v^2 \cos^2\theta} \)</p>
+
+  <div class="controls">
+    <label>初速 v (m/s): <input type="range" id="v" min="10" max="100" value="50"><span id="vVal">50</span></label><br>
+    <label>角度 θ (°): <input type="range" id="theta" min="10" max="80" value="45"><span id="thetaVal">45</span></label><br>
+    <button onclick="resetAnimation()">重置</button>
+  </div>
+
+  <canvas id="canvas" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const g = 9.8;
+    let animationId;
+
+    function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.beginPath(); ctx.moveTo(0, canvas.height); ctx.lineTo(canvas.width, canvas.height); ctx.strokeStyle='#888'; ctx.stroke(); // 地面
+
+      const v = +document.getElementById('v').value;
+      const theta = +document.getElementById('theta').value * Math.PI / 180;
+      document.getElementById('vVal').textContent = v;
+      document.getElementById('thetaVal').textContent = document.getElementById('theta').value;
+
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      for (let x = 0; x <= canvas.width; x += 5) {
+        const y = x * Math.tan(theta) - (g * x * x) / (2 * v * v * Math.cos(theta)**2);
+        if (y > -canvas.height) ctx.lineTo(x, canvas.height - y*4); // 放大显示
+      }
+      ctx.strokeStyle = '#007bff'; ctx.lineWidth=3; ctx.stroke();
+
+      // 小球动画（简单）
+      const t = performance.now() / 1000 % 5;
+      const x = v * Math.cos(theta) * t * 20;
+      const y = v * Math.sin(theta) * t - 0.5 * g * t * t;
+      if (y >= 0) {
+        ctx.beginPath(); ctx.arc(x, canvas.height - y*4, 10, 0, Math.PI*2);
+        ctx.fillStyle='#ff4444'; ctx.fill();
+      }
+    }
+
+    function animate() { draw(); animationId = requestAnimationFrame(animate); }
+    function resetAnimation() { cancelAnimationFrame(animationId); animate(); }
+
+    document.getElementById('v').oninput = resetAnimation;
+    document.getElementById('theta').oninput = resetAnimation;
+    animate();
+  </script>
+
+  <p><a href="../..">← 返回首页</a></p>
+</body>
+</html>

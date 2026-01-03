@@ -59,7 +59,7 @@ body {
 #logo.return-mode { cursor: pointer; }
 #logo.return-mode:hover { opacity: 0.85; }
 #logo.return-mode::after {
-  content: '返回搜索';
+  content: '返回';
   position: absolute;
   top: 100%;
   left: 50%;
@@ -306,7 +306,7 @@ body {
 }
 .card {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   padding: 12px;
   background: var(--card-bg);
   border-radius: 12px;
@@ -316,16 +316,11 @@ body {
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
   overflow: hidden;
-  cursor: pointer;
+  position: relative;
 }
 .card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 18px rgba(0,0,0,0.14);
-}
-.card .top {
-  display: flex;
-  align-items: center;
-  flex: 1;
 }
 .card img {
   width: 48px;
@@ -340,12 +335,11 @@ body {
 .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .desc { font-size: 13px; color: var(--text-light); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .credit {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
   font-size: 12px;
-  color: #777;
-  margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #888;
 }
 .ad-box {
   margin: 40px 0;
@@ -356,7 +350,7 @@ body {
   text-align: center;
   box-shadow: var(--shadow-sm);
 }
-iframe#internal-frame {
+iframe#iframe-content {
   width: 100%;
   height: 100%;
   border: none;
@@ -366,7 +360,7 @@ iframe#internal-frame {
 <body>
 <div id="layout">
   <div id="sidebar">
-    <div id="logo" onclick="backToSearch()">导　航</div>
+    <div id="logo" onclick="backToPrevious()">导　航</div>
     <div id="cats">
       <div style="padding:20px;text-align:center;color:#999;font-size:14px;">加载中...</div>
     </div>
@@ -475,7 +469,9 @@ let currentEngine = "https://www.baidu.com/s?wd=";
 let data = [];
 let xmlDoc = null;
 const categoryCache = new Map();
-let currentCategoryIndex = -1;
+let lastState = 'search'; // 'search', 'category', 'experiment', 'external'
+let lastCategoryIndex = null;
+let lastCategoryData = null;
 
 function getDomain(url) {
   try {
@@ -484,6 +480,10 @@ function getDomain(url) {
   } catch {
     return 'example.com';
   }
+}
+
+function isInternal(url) {
+  return url.startsWith('/') && !url.startsWith('//');
 }
 
 document.getElementById('cats').innerHTML = '<div style="padding:20px;text-align:center;color:#999;font-size:14px;">加载中...</div>';
@@ -519,10 +519,6 @@ fetch(API)
 function renderCats() {
   const box = document.getElementById('cats');
   box.innerHTML = '';
-  if (data.length === 0) {
-    box.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">暂无分类</div>';
-    return;
-  }
   data.forEach((cat, idx) => {
     const el = document.createElement('div');
     el.className = 'cat';
@@ -530,7 +526,6 @@ function renderCats() {
     el.onclick = () => {
       document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
       el.classList.add('active');
-      currentCategoryIndex = idx;
       loadCategory(idx);
     };
     box.appendChild(el);
@@ -538,6 +533,8 @@ function renderCats() {
 }
 
 function loadCategory(idx) {
+  lastState = 'category';
+  lastCategoryIndex = idx;
   if (categoryCache.has(idx)) {
     showCategory(categoryCache.get(idx));
     return;
@@ -558,6 +555,7 @@ function loadCategory(idx) {
     }))
   };
   categoryCache.set(idx, catData);
+  lastCategoryData = catData;
   showCategory(catData);
 }
 
@@ -573,18 +571,20 @@ function showCategory(cat) {
     cont.innerHTML += `<div class="sub-title">${sub.name}</div><div class="links"></div>`;
     const linksBox = cont.lastElementChild;
     sub.links.forEach(link => {
-      const a = document.createElement('div'); // 用 div 代替 a，避免默认跳转
+      const a = document.createElement('a');
       a.className = 'card';
-      a.onclick = () => {
-        if (link.url.startsWith('/')) {
-          loadInternal(link.url);
-        } else {
-          window.open(link.url, '_blank');
+      a.href = link.url;
+      a.onclick = (e) => {
+        if (isInternal(link.url)) {
+          e.preventDefault();
+          loadExperiment(link.url);
         }
+        // 外部链接默认新窗口（target 在下面设置）
       };
-
-      const top = document.createElement('div');
-      top.className = 'top';
+      if (!isInternal(link.url)) {
+        a.target = '_blank';
+        a.rel = 'noopener';
+      }
 
       const img = document.createElement('img');
       const domain = getDomain(link.url);
@@ -599,15 +599,14 @@ function showCategory(cat) {
       textDiv.className = 'text';
       textDiv.innerHTML = `<div class="name">${link.name}</div><div class="desc">${link.desc}</div>`;
 
-      const creditDiv = document.createElement('div');
-      creditDiv.className = 'credit';
-      let credit = '';
-      if (link.author) credit += `作者：${link.author}`;
-      if (link.contributors) credit += (credit ? ' ' : '') + `贡献者：${link.contributors}`;
-      creditDiv.textContent = credit || '作者：未知';
+      let creditText = '';
+      if (link.author) creditText += `作者：${link.author}`;
+      if (link.contributors) creditText += (creditText ? '　' : '') + `贡献者：${link.contributors}`;
+      const credit = document.createElement('div');
+      credit.className = 'credit';
+      credit.textContent = creditText;
 
-      top.append(img, textDiv);
-      a.append(top, creditDiv);
+      a.append(img, textDiv, credit);
       linksBox.appendChild(a);
     });
   });
@@ -615,30 +614,49 @@ function showCategory(cat) {
   closeSidebarOnMobile();
 }
 
-function loadInternal(url) {
+function loadExperiment(url) {
+  lastState = 'experiment';
+  document.getElementById('search-page').style.display = 'none';
   const cont = document.getElementById('content');
-  cont.innerHTML = `<iframe id="internal-frame" src="${url}"></iframe>`;
+  cont.innerHTML = `<iframe id="iframe-content" src="${url}" allowfullscreen></iframe>`;
   cont.style.padding = '0';
+  cont.style.display = 'block';
   document.getElementById('logo').classList.add('return-mode');
+  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
   closeSidebarOnMobile();
 }
 
+function backToPrevious() {
+  const cont = document.getElementById('content');
+  if (lastState === 'experiment' || lastState === 'external') {
+    if (lastCategoryData) {
+      showCategory(lastCategoryData);
+      lastState = 'category';
+    } else {
+      backToSearch();
+    }
+  } else if (lastState === 'category') {
+    backToSearch();
+  }
+}
+
 function backToSearch() {
-  const content = document.getElementById('content');
-  content.style.display = 'none';
-  content.style.padding = '28px';
-  content.innerHTML = '';
+  lastState = 'search';
+  lastCategoryIndex = null;
+  lastCategoryData = null;
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('content').innerHTML = '';
   document.getElementById('search-page').style.display = 'flex';
   document.getElementById('logo').classList.remove('return-mode');
   document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
-  currentCategoryIndex = -1;
   closeSidebarOnMobile();
 }
 
 function loadExternal(url) {
+  lastState = 'external';
   document.getElementById('search-page').style.display = 'none';
   const cont = document.getElementById('content');
-  cont.innerHTML = '<iframe id="internal-frame" src="' + url + '"></iframe>';
+  cont.innerHTML = `<iframe id="iframe-content" src="${url}" allowfullscreen></iframe>`;
   cont.style.padding = '0';
   cont.style.display = 'block';
   document.getElementById('logo').classList.add('return-mode');
@@ -693,6 +711,7 @@ document.body.insertAdjacentHTML('beforeend', `
   <input hidden type="radio" name="type" id="type-liepin" value="https://www.liepin.com/zhaopin/?key=" data-placeholder="猎聘网">
 </div>
 `);
+
 document.querySelectorAll('input[name="type"]').forEach(radio => {
   radio.addEventListener("change", () => {
     currentEngine = radio.value;
@@ -700,18 +719,22 @@ document.querySelectorAll('input[name="type"]').forEach(radio => {
     document.getElementById("search-text").placeholder = ph;
   });
 });
+
 function doSearch() {
   const kw = document.getElementById("search-text").value.trim();
   if (!kw) return;
   window.open(currentEngine + encodeURIComponent(kw), "_blank");
 }
+
 document.getElementById("search-text").addEventListener("keydown", e => {
   if (e.key === "Enter") {
     e.preventDefault();
     doSearch();
   }
 });
+
 document.querySelector(".super-search-fm .submit").addEventListener("click", doSearch);
+
 document.querySelectorAll('.s-type-list label').forEach(label => {
   label.addEventListener('click', () => {
     document.querySelectorAll('.s-type-list label').forEach(l => l.classList.remove('active'));
@@ -735,6 +758,7 @@ document.querySelectorAll('.s-type-list label').forEach(label => {
     }
   });
 });
+
 document.querySelectorAll('.search-type label').forEach(label => {
   label.addEventListener('click', () => {
     document.querySelectorAll('.search-type label').forEach(l => l.classList.remove('selected'));
@@ -749,6 +773,7 @@ document.querySelectorAll('.search-type label').forEach(label => {
     updateIndicator(label);
   });
 });
+
 function updateIndicator(label) {
   const indicator = document.getElementById('indicator');
   const rect = label.getBoundingClientRect();
@@ -757,6 +782,7 @@ function updateIndicator(label) {
   indicator.style.marginLeft = `${offsetLeft}px`;
   indicator.classList.add('active');
 }
+
 window.addEventListener('load', () => {
   const firstLabel = document.querySelector('.search-group.group-a .search-type label:first-child');
   if (firstLabel) updateIndicator(firstLabel);

@@ -571,21 +571,18 @@ function showCategory(cat) {
     if (!sub.links.length) return;
     cont.innerHTML += `<div class="sub-title">${sub.name}</div><div class="links"></div>`;
     const linksBox = cont.lastElementChild;
-    sub.links.forEach(link => {
-      const a = document.createElement('a');
-      a.className = 'card';
-      a.href = link.url; // 恢复原始 url
-      a.target = isInternalLink(link.url) ? '' : '_blank';
-      a.rel = isInternalLink(link.url) ? '' : 'noopener';
+sub.links.forEach(link => {
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.href = 'javascript:void(0)';  // 关键：强制 href 为无操作，防止任何默认跳转
 
-      a.onclick = (e) => {
-        if (isInternalLink(link.url)) {
-          e.preventDefault(); // 只对站内链接阻止默认行为
-          loadExperiment(link.url);
-        }
-        // 站外链接不阻止，让它正常新窗口打开
-      };
-
+  a.onclick = () => {
+    if (isInternalLink(link.url)) {
+      loadExperiment(link.url);  // 站内：iframe 加载
+    } else {
+      window.open(link.url, '_blank', 'noopener');  // 站外：新窗口
+    }
+  };
       const img = document.createElement('img');
       const domain = getDomain(link.url);
       const favicon = link.icon.trim() || `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;

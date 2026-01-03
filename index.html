@@ -2,9 +2,9 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title> 趣味学习 </title>
+<title>趣味学习</title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="523322.xyz - 简洁实用的在线学习网站，提供搜索引擎、人工智能AI工具、视频音乐流媒体、电商购物、新闻资讯、开发者工具、教育学习、金融理财、生活服务、健康医疗、出行旅游、阅读书籍、游戏娱乐等优质网站大全，一站式上网起点！" />
+<meta name="description" content="523322.xyz - 浏览器直接运行的互动教学实验平台，涵盖物理、数学、化学、电子工程、计算机等领域的可视化模拟与演示，完全免费，无需安装，小步骤积累大知识。" />
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9474229114991789" crossorigin="anonymous"></script>
 <style>
@@ -317,6 +317,7 @@ body {
   transition: var(--transition);
   overflow: hidden;
   position: relative;
+  cursor: pointer; /* 添加手形指针 */
 }
 .card:hover {
   transform: translateY(-3px);
@@ -469,7 +470,7 @@ let currentEngine = "https://www.baidu.com/s?wd=";
 let data = [];
 let xmlDoc = null;
 const categoryCache = new Map();
-let lastState = 'search'; // 'search', 'category', 'experiment'
+let lastState = 'search';
 let lastCategoryData = null;
 
 function getDomain(url) {
@@ -481,7 +482,6 @@ function getDomain(url) {
   }
 }
 
-// 判断是否为站内相对路径链接
 function isInternalLink(url) {
   if (typeof url !== 'string') return false;
   const trimmed = url.trim();
@@ -571,18 +571,21 @@ function showCategory(cat) {
     if (!sub.links.length) return;
     cont.innerHTML += `<div class="sub-title">${sub.name}</div><div class="links"></div>`;
     const linksBox = cont.lastElementChild;
-sub.links.forEach(link => {
-  const a = document.createElement('a');
-  a.className = 'card';
-  a.href = 'javascript:void(0)';  // 关键：强制 href 为无操作，防止任何默认跳转
+    sub.links.forEach(link => {
+      const a = document.createElement('a');
+      a.className = 'card';
+      a.href = 'javascript:void(0)'; // 防止默认跳转
 
-  a.onclick = () => {
-    if (isInternalLink(link.url)) {
-      loadExperiment(link.url);  // 站内：iframe 加载
-    } else {
-      window.open(link.url, '_blank', 'noopener');  // 站外：新窗口
-    }
-  };
+      a.onclick = function(e) {
+        e.preventDefault(); // 明确阻止事件
+        if (isInternalLink(link.url)) {
+          loadExperiment(link.url);
+        } else {
+          window.open(link.url, '_blank', 'noopener');
+        }
+        return false;
+      };
+
       const img = document.createElement('img');
       const domain = getDomain(link.url);
       const favicon = link.icon.trim() || `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
@@ -599,6 +602,7 @@ sub.links.forEach(link => {
       let creditText = '';
       if (link.author) creditText += `作者：${link.author}`;
       if (link.contributors) creditText += (creditText ? '　' : '') + `贡献者：${link.contributors}`;
+      if (!creditText) creditText = '作者：523322'; // 默认显示
       const credit = document.createElement('div');
       credit.className = 'credit';
       credit.textContent = creditText;
@@ -665,7 +669,6 @@ function closeSidebarOnMobile() {
   }
 }
 
-/* 搜索功能保持原样 */
 document.body.insertAdjacentHTML('beforeend', `
 <div style="display:none;">
   <input hidden type="radio" name="type" checked id="type-baidu" value="https://www.baidu.com/s?wd=" data-placeholder="百度一下，你就知道">

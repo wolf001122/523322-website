@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>趣味学习</title>
+<title> 趣味学习 </title>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="description" content="523322.xyz - 简洁实用的在线学习网站，提供搜索引擎、人工智能AI工具、视频音乐流媒体、电商购物、新闻资讯、开发者工具、教育学习、金融理财、生活服务、健康医疗、出行旅游、阅读书籍、游戏娱乐等优质网站大全，一站式上网起点！" />
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -58,6 +58,23 @@ body {
 }
 #logo.return-mode { cursor: pointer; }
 #logo.return-mode:hover { opacity: 0.85; }
+#logo.return-mode::after {
+  content: '返回搜索';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#logo.return-mode:hover::after { opacity: 1; }
 #cats {
   flex: 1;
   overflow-y: auto;
@@ -119,7 +136,7 @@ body {
   box-shadow: var(--shadow-sm);
   min-height: 70px;
 }
-#content { flex: 1; overflow: hidden; padding: 28px; background: var(--bg); display: none; }
+#content { flex: 1; overflow: auto; padding: 28px; background: var(--bg); display: none; }
 #search-page {
   flex: 1;
   display: flex;
@@ -127,68 +144,229 @@ body {
   align-items: center;
   padding: 40px 20px;
 }
-.s-search { width:100%; max-width:960px; text-align:center; }
-.s-type-list { display:flex; justify-content:center; gap:48px; margin-bottom:40px; font-size:18px; font-weight:500; }
-.s-type-list label { cursor:pointer; color:var(--search-text-normal); padding:8px 0; position:relative; transition:all 0.3s ease; }
-.s-type-list label:hover { color:var(--primary); }
-.s-type-list label.active { color:var(--search-primary); }
+.s-search {
+  width:100%;
+  max-width:960px;
+  text-align:center;
+}
+.s-type-list {
+  display:flex;
+  justify-content:center;
+  gap:48px;
+  margin-bottom:40px;
+  font-size:18px;
+  font-weight:500;
+}
+.s-type-list label {
+  cursor:pointer;
+  color:var(--search-text-normal);
+  padding:8px 0;
+  position:relative;
+  transition:all 0.3s ease;
+}
+.s-type-list label:hover {
+  color:var(--primary);
+}
+.s-type-list label.active {
+  color:var(--search-primary);
+}
 .s-type-list label.active::after {
-  content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%);
-  width:36px; height:4px; background:var(--search-primary); border-radius:2px; box-shadow:0 0 12px var(--primary-glow);
+  content:'';
+  position:absolute;
+  bottom:-12px;
+  left:50%;
+  transform:translateX(-50%);
+  width:36px;
+  height:4px;
+  background:var(--search-primary);
+  border-radius:2px;
+  box-shadow:0 0 12px var(--primary-glow);
 }
 .super-search-fm {
-  position:relative; display:flex; align-items:center; width:100%; max-width:760px; height:56px;
-  margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow: var(--shadow-sm);
+  position:relative;
+  display:flex;
+  align-items:center;
+  width:100%;
+  max-width:760px;
+  height:56px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow: var(--shadow-sm);
   border:1px solid var(--border);
 }
-.super-search-fm input { flex:1; padding:0 28px; font-size:19px; border:none; outline:none; background:transparent; color:#333; }
-.super-search-fm input::placeholder { color:#aaa; }
-.super-search-fm .submit { width:68px; height:100%; background:transparent; border:none; cursor:pointer; font-size:28px; color:#777; transition:all 0.3s; }
-.super-search-fm .submit:hover { color:#333; }
-.indicator { width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:12px solid var(--search-primary); margin:20px auto 0; opacity:0; transition:opacity 0.3s; pointer-events:none; }
-.indicator.active { opacity:1; }
-.search-type-wrapper { position:relative; margin-top:40px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:10px; }
-.search-group { display:none; }
-.search-group.active { display:block; }
-.search-type { display:flex; justify-content:center; flex-wrap:nowrap; gap:20px; min-width:min-content; padding:0 20px; white-space:nowrap; }
+.super-search-fm input {
+  flex:1;
+  padding:0 28px;
+  font-size:19px;
+  border:none;
+  outline:none;
+  background:transparent;
+  color:#333;
+}
+.super-search-fm input::placeholder {
+  color:#aaa;
+}
+.super-search-fm .submit {
+  width:68px;
+  height:100%;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  font-size:28px;
+  color:#777;
+  transition:all 0.3s;
+}
+.super-search-fm .submit:hover {
+  color:#333;
+}
+.indicator {
+  width:0;
+  height:0;
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+  border-bottom:12px solid var(--search-primary);
+  margin:20px auto 0;
+  opacity:0;
+  transition:opacity 0.3s;
+  pointer-events:none;
+}
+.indicator.active {
+  opacity:1;
+}
+.search-type-wrapper {
+  position:relative;
+  margin-top:40px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:10px;
+}
+.search-group {
+  display:none;
+}
+.search-group.active {
+  display:block;
+}
+.search-type {
+  display:flex;
+  justify-content:center;
+  flex-wrap:nowrap;
+  gap:20px;
+  min-width:min-content;
+  padding:0 20px;
+  white-space:nowrap;
+}
 .search-type label {
-  cursor:pointer; padding:10px 26px; background:var(--search-card-bg); border:1px solid var(--search-border);
-  border-radius:30px; color:var(--search-text-muted); font-size:16px; font-weight:500; transition:all 0.3s ease;
-  backdrop-filter:blur(12px); flex-shrink:0;
+  cursor:pointer;
+  padding:10px 26px;
+  background:var(--search-card-bg);
+  border:1px solid var(--search-border);
+  border-radius:30px;
+  color:var(--search-text-muted);
+  font-size:16px;
+  font-weight:500;
+  transition:all 0.3s ease;
+  backdrop-filter:blur(12px);
+  flex-shrink:0;
 }
-.search-type label:hover { background:var(--search-card-hover-bg); color:var(--search-primary); border-color:var(--search-primary); box-shadow:0 0 16px var(--primary-glow); }
-.search-type label.selected { background:var(--search-card-hover-bg); color:var(--search-primary); border-color:var(--search-primary); box-shadow:0 0 16px var(--primary-glow); font-weight:600; }
-.search-type-wrapper::-webkit-scrollbar { height:6px; }
-.search-type-wrapper::-webkit-scrollbar-thumb { background:rgba(26,115,232,0.4); border-radius:3px; }
-
+.search-type label:hover {
+  background:var(--search-card-hover-bg);
+  color:var(--search-primary);
+  border-color:var(--search-primary);
+  box-shadow:0 0 16px var(--primary-glow);
+}
+.search-type label.selected {
+  background:var(--search-card-hover-bg);
+  color:var(--search-primary);
+  border-color:var(--search-primary);
+  box-shadow:0 0 16px var(--primary-glow);
+  font-weight:600;
+}
+.search-type-wrapper::-webkit-scrollbar {
+  height:6px;
+}
+.search-type-wrapper::-webkit-scrollbar-thumb {
+  background:rgba(26,115,232,0.4);
+  border-radius:3px;
+}
 .category-title { font-size: 32px; font-weight: 600; margin-bottom: 16px; }
-.sub-title { font-size: 20px; color: var(--primary); margin: 36px 0 14px; padding-bottom: 6px; border-bottom: 2px solid var(--primary); }
-.links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding: 0 8px; }
-.card {
-  display: flex; align-items: center; padding: 14px 12px; background: var(--card-bg); border-radius: 12px;
-  text-decoration: none; color: inherit; height: 100px; box-shadow: var(--shadow-sm); transition: var(--transition); overflow: hidden;
-  position: relative;
+.sub-title {
+  font-size: 20px;
+  color: var(--primary);
+  margin: 36px 0 14px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--primary);
 }
-.card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.14); }
+.links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 0 8px;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  height: 110px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  overflow: hidden;
+  cursor: pointer;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+}
+.card .top {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
 .card img {
-  width: 48px; height: 48px; min-width: 48px; object-fit: contain; background: var(--bg);
-  border-radius: 8px; padding: 4px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  object-fit: contain;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 4px;
 }
 .text { margin-left: 12px; overflow: hidden; flex: 1; }
 .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .desc { font-size: 13px; color: var(--text-light); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .credit {
-  position: absolute; right: 10px; bottom: 6px; font-size: 11px; color: #888; background: var(--card-bg);
-  padding: 0 4px; border-radius: 3px; white-space: nowrap;
+  font-size: 12px;
+  color: #777;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.ad-box { margin: 40px 0; padding: 24px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; text-align: center; box-shadow: var(--shadow-sm); }
-iframe#external-frame { width: 100%; height: 100%; border: none; }
+.ad-box {
+  margin: 40px 0;
+  padding: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+iframe#internal-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
 </style>
 </head>
 <body>
 <div id="layout">
   <div id="sidebar">
-    <div id="logo" onclick="backToPrevious()">导　航</div>
+    <div id="logo" onclick="backToSearch()">导　航</div>
     <div id="cats">
       <div style="padding:20px;text-align:center;color:#999;font-size:14px;">加载中...</div>
     </div>
@@ -290,7 +468,6 @@ iframe#external-frame { width: 100%; height: 100%; border: none; }
     <div id="content"></div>
   </div>
 </div>
-
 <script>
 const API = '/api/data';
 const DEF_ICON = '/icons/gray.png';
@@ -298,24 +475,23 @@ let currentEngine = "https://www.baidu.com/s?wd=";
 let data = [];
 let xmlDoc = null;
 const categoryCache = new Map();
-let lastView = 'search';
-let lastCategoryIndex = null;
+let currentCategoryIndex = -1;
 
 function getDomain(url) {
   try {
     const h = new URL(url).hostname;
     return h.startsWith('www.') ? h.slice(4) : h;
-  } catch { return 'example.com'; }
-}
-
-function isInternalExperiment(url) {
-  return !/^https?:\/\//i.test(String(url).trim());
+  } catch {
+    return 'example.com';
+  }
 }
 
 document.getElementById('cats').innerHTML = '<div style="padding:20px;text-align:center;color:#999;font-size:14px;">加载中...</div>';
-
 fetch(API)
-  .then(r => { if (!r.ok) throw new Error('Network error'); return r.text(); })
+  .then(r => {
+    if (!r.ok) throw new Error('Network error');
+    return r.text();
+  })
   .then(text => {
     xmlDoc = new DOMParser().parseFromString(text, 'text/xml');
     data = [...xmlDoc.querySelectorAll('category')].map(c => ({
@@ -343,6 +519,10 @@ fetch(API)
 function renderCats() {
   const box = document.getElementById('cats');
   box.innerHTML = '';
+  if (data.length === 0) {
+    box.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">暂无分类</div>';
+    return;
+  }
   data.forEach((cat, idx) => {
     const el = document.createElement('div');
     el.className = 'cat';
@@ -350,6 +530,7 @@ function renderCats() {
     el.onclick = () => {
       document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
       el.classList.add('active');
+      currentCategoryIndex = idx;
       loadCategory(idx);
     };
     box.appendChild(el);
@@ -357,8 +538,6 @@ function renderCats() {
 }
 
 function loadCategory(idx) {
-  lastView = 'category';
-  lastCategoryIndex = idx;
   if (categoryCache.has(idx)) {
     showCategory(categoryCache.get(idx));
     return;
@@ -387,98 +566,81 @@ function showCategory(cat) {
   const cont = document.getElementById('content');
   cont.style.display = 'block';
   cont.innerHTML = `<div class="category-title">${cat.name}</div>
-    <div class="ad-box"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9474229114991789" data-ad-slot="9876543210" data-ad-format="auto"></ins></div>`;
+  <div class="ad-box"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9474229114991789" data-ad-slot="9876543210" data-ad-format="auto"></ins></div>`;
   (adsbygoogle = window.adsbygoogle || []).push({});
-
   cat.subs.forEach(sub => {
     if (!sub.links.length) return;
     cont.innerHTML += `<div class="sub-title">${sub.name}</div><div class="links"></div>`;
-    const linksBox = cont.lastElementChild.previousElementSibling;
-
+    const linksBox = cont.lastElementChild;
     sub.links.forEach(link => {
-      const a = document.createElement('a');
+      const a = document.createElement('div'); // 用 div 代替 a，避免默认跳转
       a.className = 'card';
+      a.onclick = () => {
+        if (link.url.startsWith('/')) {
+          loadInternal(link.url);
+        } else {
+          window.open(link.url, '_blank');
+        }
+      };
 
-      if (isInternalExperiment(link.url)) {
-        a.href = 'javascript:void(0);';
-        a.onclick = (e) => { e.preventDefault(); loadInternalExperiment(link.url); };
-      } else {
-        a.href = link.url;
-        a.target = '_blank';
-        a.rel = 'noopener';
-      }
+      const top = document.createElement('div');
+      top.className = 'top';
 
       const img = document.createElement('img');
       const domain = getDomain(link.url);
       const favicon = link.icon.trim() || `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
       img.src = favicon;
-      img.onerror = () => { img.src = `https://${domain}/favicon.ico`; img.onerror = () => img.src = DEF_ICON; };
+      img.onerror = () => {
+        img.src = `https://${domain}/favicon.ico`;
+        img.onerror = () => { img.src = DEF_ICON; };
+      };
 
       const textDiv = document.createElement('div');
       textDiv.className = 'text';
       textDiv.innerHTML = `<div class="name">${link.name}</div><div class="desc">${link.desc}</div>`;
 
-      a.appendChild(img);
-      a.appendChild(textDiv);
-
-      // 作者/贡献者信息
+      const creditDiv = document.createElement('div');
+      creditDiv.className = 'credit';
       let credit = '';
       if (link.author) credit += `作者：${link.author}`;
-      if (link.contributors && link.contributors.trim()) credit += (credit ? '　' : '') + `贡献者：${link.contributors.trim()}`;
-      if (credit) {
-        const creditSpan = document.createElement('span');
-        creditSpan.className = 'credit';
-        creditSpan.textContent = credit;
-        a.appendChild(creditSpan);
-      }
+      if (link.contributors) credit += (credit ? ' ' : '') + `贡献者：${link.contributors}`;
+      creditDiv.textContent = credit || '作者：未知';
 
+      top.append(img, textDiv);
+      a.append(top, creditDiv);
       linksBox.appendChild(a);
     });
   });
-
   document.getElementById('logo').classList.add('return-mode');
   closeSidebarOnMobile();
 }
 
-function loadInternalExperiment(url) {
-  document.getElementById('search-page').style.display = 'none';
+function loadInternal(url) {
   const cont = document.getElementById('content');
-  cont.innerHTML = `<iframe id="external-frame" src="${url}" allowfullscreen sandbox="allow-scripts allow-same-origin allow-modals allow-popups"></iframe>`;
-  cont.style.display = 'flex';
+  cont.innerHTML = `<iframe id="internal-frame" src="${url}"></iframe>`;
   cont.style.padding = '0';
   document.getElementById('logo').classList.add('return-mode');
-  document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
   closeSidebarOnMobile();
-}
-
-function backToPrevious() {
-  const cont = document.getElementById('content');
-  cont.innerHTML = '';
-  cont.style.padding = '28px';
-  cont.style.display = lastView === 'category' && lastCategoryIndex !== null ? 'block' : 'none';
-  if (lastView === 'category' && lastCategoryIndex !== null) {
-    loadCategory(lastCategoryIndex);
-  } else {
-    backToSearch();
-  }
 }
 
 function backToSearch() {
-  lastView = 'search';
-  lastCategoryIndex = null;
-  document.getElementById('content').style.display = 'none';
+  const content = document.getElementById('content');
+  content.style.display = 'none';
+  content.style.padding = '28px';
+  content.innerHTML = '';
   document.getElementById('search-page').style.display = 'flex';
   document.getElementById('logo').classList.remove('return-mode');
   document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
+  currentCategoryIndex = -1;
   closeSidebarOnMobile();
 }
 
 function loadExternal(url) {
   document.getElementById('search-page').style.display = 'none';
   const cont = document.getElementById('content');
-  cont.innerHTML = `<iframe id="external-frame" src="${url}" allowfullscreen></iframe>`;
-  cont.style.display = 'flex';
+  cont.innerHTML = '<iframe id="internal-frame" src="' + url + '"></iframe>';
   cont.style.padding = '0';
+  cont.style.display = 'block';
   document.getElementById('logo').classList.add('return-mode');
   document.querySelectorAll('.cat').forEach(c => c.classList.remove('active'));
   closeSidebarOnMobile();
@@ -496,7 +658,6 @@ function closeSidebarOnMobile() {
   }
 }
 
-/* ==================== 以下为完整的搜索功能脚本（一行未少） ==================== */
 document.body.insertAdjacentHTML('beforeend', `
 <div style="display:none;">
   <input hidden type="radio" name="type" checked id="type-baidu" value="https://www.baidu.com/s?wd=" data-placeholder="百度一下，你就知道">
@@ -532,26 +693,25 @@ document.body.insertAdjacentHTML('beforeend', `
   <input hidden type="radio" name="type" id="type-liepin" value="https://www.liepin.com/zhaopin/?key=" data-placeholder="猎聘网">
 </div>
 `);
-
 document.querySelectorAll('input[name="type"]').forEach(radio => {
   radio.addEventListener("change", () => {
     currentEngine = radio.value;
-    document.getElementById("search-text").placeholder = radio.getAttribute("data-placeholder") || "输入关键字搜索";
+    const ph = radio.getAttribute("data-placeholder") || "输入关键字搜索";
+    document.getElementById("search-text").placeholder = ph;
   });
 });
-
 function doSearch() {
   const kw = document.getElementById("search-text").value.trim();
   if (!kw) return;
   window.open(currentEngine + encodeURIComponent(kw), "_blank");
 }
-
 document.getElementById("search-text").addEventListener("keydown", e => {
-  if (e.key === "Enter") { e.preventDefault(); doSearch(); }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    doSearch();
+  }
 });
-
 document.querySelector(".super-search-fm .submit").addEventListener("click", doSearch);
-
 document.querySelectorAll('.s-type-list label').forEach(label => {
   label.addEventListener('click', () => {
     document.querySelectorAll('.s-type-list label').forEach(l => l.classList.remove('active'));
@@ -575,7 +735,6 @@ document.querySelectorAll('.s-type-list label').forEach(label => {
     }
   });
 });
-
 document.querySelectorAll('.search-type label').forEach(label => {
   label.addEventListener('click', () => {
     document.querySelectorAll('.search-type label').forEach(l => l.classList.remove('selected'));
@@ -590,7 +749,6 @@ document.querySelectorAll('.search-type label').forEach(label => {
     updateIndicator(label);
   });
 });
-
 function updateIndicator(label) {
   const indicator = document.getElementById('indicator');
   const rect = label.getBoundingClientRect();
@@ -599,7 +757,6 @@ function updateIndicator(label) {
   indicator.style.marginLeft = `${offsetLeft}px`;
   indicator.classList.add('active');
 }
-
 window.addEventListener('load', () => {
   const firstLabel = document.querySelector('.search-group.group-a .search-type label:first-child');
   if (firstLabel) updateIndicator(firstLabel);
